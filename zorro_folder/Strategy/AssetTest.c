@@ -1,4 +1,4 @@
-#include <parsers.h>
+#include <parser_assetlist.h>
 
 int AssetParseTest1();
 int AssetParseTest2();
@@ -33,7 +33,7 @@ void print_AssetListEntry(const AssetListEntry* e)
 		, e->vLotAmount
 		, e->vCommission
 		, e->sSymbol
-		, e->nStrategies
+		, e->bwStrategies
 	);
 }
 
@@ -79,8 +79,18 @@ int AssetParseTest3()
 		pEntry = (AssetListEntry*)da_data(hList, i);
 		print_AssetListEntry(pEntry);
 	}
-
+	
+	if(requireAsset(hList,1,"EUR/USD")){printf("\nyes");} else {printf("\nno");}
+	if(requireAsset(hList,1,"GBP/USD")){printf("\nyes");} else {printf("\nno");}
+	if(requireAsset(hList,1,"USD/CAD")){printf("\nyes");} else {printf("\nno");}
+	assetAddNeeded(hList);
+	
 	return 0;
 }
 
+// // only add assets that are required by a sub-strategy.
+// void assetAddNeeded(int handle);
 
+// // indicates that an asset is required.
+// // Applies bitwise or to strategy.
+// bool requireAsset(int handle, int bwStrategy, const char* Name);
