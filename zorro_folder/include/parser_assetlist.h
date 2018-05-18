@@ -7,6 +7,17 @@
 int ParseAssetList(const char* filename);
 int ParseAssetListString(const char* file_contents);
 
+// ** RELATED ASSET LIST FUNCTIONS **
+
+// only add assets that are required by a sub-strategy.
+void assetAddNeeded(int handle);
+
+// indicates that an asset is required.
+// Applies bitwise or to strategy.
+bool requireAsset(int handle, int bwStrategy, const char* Name);
+
+
+
 // ** ASSET LIST PARSER **
 
 // AssetListEntry : an asset list line item with a bitwise sub-strategy identifier.
@@ -24,7 +35,7 @@ typedef struct AssetListEntry
 	var vLotAmount;
 	var vCommission;
 	char sSymbol[32];
-	int nStrategies; // Bitwise: Identify which sub-strageties need this Asset, 0 if not needed.
+	int bwStrategies; // Bitwise: Identify which sub-strageties need this Asset, 0 if not needed.
 } AssetListEntry;
 
 
@@ -177,3 +188,58 @@ int ParseAssetList(const char* filename)
 	return ParseAssetListString(file_content(filename));
 }
 
+bool requireAsset(int handle, int bwStrategy, const char* Name)
+{
+	int len, i;
+	len = da_size(handle);
+	if(!len) 
+	{
+		printf("\ndynamic array is empty!");
+		return false;
+	}
+	
+	AssetListEntry* pEntry = NULL;
+	for(i = 0; i< len; i++)
+	{
+		pEntry = da_data(handle,i);
+		if(strcmp(pEntry->sName,Name)) continue;
+		
+		// good
+		pEntry->bwStrategies |= bwStrategy;
+		return true;
+	}
+	// no matchint a
+	
+	return false;
+	
+}
+
+void assetAddNeeded(int handle)
+{
+	int len, i;
+	len = da_size(handle);
+	if(!len) return;
+	AssetListEntry* pEntry = NULL;
+	for(i = 0; i< len; i++)
+	{
+		pEntry = da_data(handle,i);
+		if(!pEntry->bwStrategies) continue;
+		
+		// good
+		assetAdd (
+			pEntry->sName, 
+			pEntry->vPrice, 
+			pEntry->vSpread, 
+			pEntry->vRollLong, 
+			pEntry->vRollShort, 
+			pEntry->vPip, 
+			pEntry->vPipCost, 
+			pEntry->vMarginCost, 
+			pEntry->vLeverage, 
+			pEntry->vLotAmount, 
+			pEntry->vCommission, 
+			pEntry->sSymbol
+		);
+	}
+	return;
+}
