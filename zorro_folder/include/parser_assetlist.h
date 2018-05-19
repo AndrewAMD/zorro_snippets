@@ -12,6 +12,10 @@ int ParseAssetListString(const char* file_contents);
 // only add assets that are required by a sub-strategy.
 void assetAddNeeded(int handle);
 
+// generate asset list csv and place it in the History folder.
+void saveAssetListNeeded(int handle, const char* filename);
+
+
 // indicates that an asset is required.
 // Applies bitwise or to strategy.
 bool requireAsset(int handle, int bwStrategy, const char* Name);
@@ -171,7 +175,7 @@ int ParseAssetListString(const char* AssetListString)
 	da_delete(hLines);
 	free(str);
 
-	// successful? check size->
+	// successful? check sizpEntry->
 	if (da_size(hList))
 		return hList;
 	else
@@ -242,4 +246,47 @@ void assetAddNeeded(int handle)
 		);
 	}
 	return;
+}
+
+
+void saveAssetListNeeded(int handle, const char* filename)
+{
+	int len, i;
+	char full_filename[128];
+	strcpy(full_filename,".\\History\\");
+	strcat(full_filename,filename);
+	
+	len = da_size(handle);
+	if(!len) return;
+	AssetListEntry* pEntry = NULL;
+	
+	char line[256];
+	strcpy(line,"Name,Price,Spread,RollLong,RollShort,PIP,PIPCost,MarginCost,Leverage,LotAmount,Commission,Symbol\r\n");
+	
+	// start file, make header
+	file_write(full_filename,line,0);
+	
+	// for every good entry, generate a line and append it to the file.
+		for(i = 0; i< len; i++)
+	{
+		pEntry = da_data(handle,i);
+		if(!pEntry->bwStrategies) continue;
+		
+		sprintf(line,"%s,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%.17g,%s\r\n"
+		, pEntry->sName
+		, pEntry->vPrice
+		, pEntry->vSpread
+		, pEntry->vRollLong
+		, pEntry->vRollShort
+		, pEntry->vPip
+		, pEntry->vPipCost
+		, pEntry->vMarginCost
+		, pEntry->vLeverage
+		, pEntry->vLotAmount
+		, pEntry->vCommission
+		, pEntry->sSymbol
+		);
+		file_append(full_filename,line);
+	}
+	
 }
