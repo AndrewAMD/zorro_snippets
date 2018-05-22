@@ -13,6 +13,7 @@ function run()
 	EndDate = 2018; // fixed simulation period 
 	BarPeriod = 5;
 	Verbose = 2;
+	LookBack = 2500;
 	set(LOGFILE + PARAMETERS); // log all trades
 
 	// get trading signals
@@ -50,12 +51,12 @@ function run()
 void tradeRF7B5B(int signals)
 {
 	algo("RF7B5B");
-	TimeFrame = optimize(4,0,8,1,0);	
+	TimeFrame = timeframes[optimize(4,0,8,1,0)];	
 	
-	if(signals & RF5B_BUY) enterLong();
-	if(signals & RF7B_BUY) enterLong();
-	if(signals & RF5B_SELL) enterShort();
-	if(signals & RF7B_SELL) enterShort();
+	if(signals & RF5B_BUY) enterLong(1000);
+	if(signals & RF7B_BUY) enterLong(1000);
+	if(signals & RF5B_SELL) enterShort(1000);
+	if(signals & RF7B_SELL) enterShort(1000);
 	
 	
 }
@@ -63,13 +64,17 @@ void tradeRF7B5B(int signals)
 void tradeRF7B(int signals)
 {
 	algo("RF7B");
-	if(signals & RF7B_BUY) enterLong();
-	if(signals & RF7B_SELL) enterShort();
+	TimeFrame = timeframes[optimize(4,0,8,1,0)];	
+	
+	if(signals & RF7B_BUY) enterLong(1000);
+	if(signals & RF7B_SELL) enterShort(1000);
 }
 
 void tradeRF5B(int signals)
 {
 	algo("RF5B");
-	if(signals & RF5B_BUY) enterLong();
-	if(signals & RF5B_SELL) enterShort();
+	TimeFrame = timeframes[optimize(4,0,8,1,0)];	
+	
+	if(signals & RF5B_BUY) enterLong(1000);
+	if(signals & RF5B_SELL) enterShort(1000);
 }
