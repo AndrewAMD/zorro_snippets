@@ -2,7 +2,7 @@
 #include <reversal_fractals.h>
 #include <profile.c>
 
-function tradeFunc(int signals); // empty function pointer
+void tradeFunc(int signals); // empty function pointer
 void tradeRF7B5B(int signals);
 void tradeRF7B(int signals);
 void tradeRF5B(int signals);
