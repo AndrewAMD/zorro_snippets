@@ -1,8 +1,8 @@
 // Indicatortest ///////////////////
-double UpperFractal7B(int shift, bool bk);
-double LowerFractal7B(int shift, bool bk);
-double UpperFractal5B(int shift, bool bk);
-double LowerFractal5B(int shift, bool bk);
+bool UpperFractal7B(int shift, bool bk);
+bool LowerFractal7B(int shift, bool bk);
+bool UpperFractal5B(int shift, bool bk);
+bool LowerFractal5B(int shift, bool bk);
 
 function run()
 {
