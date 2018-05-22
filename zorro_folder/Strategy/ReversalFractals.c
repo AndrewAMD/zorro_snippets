@@ -17,10 +17,10 @@ function run()
 	vars Price = series(price());
 
 // plot fractals
-	plot("+7B",-100.0*(UpperFractal7B(0,true) > 0),NEW+BARS,RED); // Upper: Sell
-	plot("-7B",100.0*(LowerFractal7B(0,true) > 0),BARS,GREEN);	 // Lower: Buy
-	plot("+5B",-100.00*(UpperFractal5B(0,true) > 0),BARS,BLUE);	 // Upper: Sell
-	plot("-5B",100.0*(LowerFractal5B(0,true) > 0),BARS,PURPLE);  // Lower: Buy
+	plot("+7B",-100.0*UpperFractal7B(0,true),NEW+BARS,RED); // Upper: Sell
+	plot("-7B",100.0*LowerFractal7B(0,true),BARS,GREEN);	 // Lower: Buy
+	plot("+5B",-100.00*UpperFractal5B(0,true),BARS,BLUE);	 // Upper: Sell
+	plot("-5B",100.0*LowerFractal5B(0,true),BARS,PURPLE);  // Lower: Buy
 
 // // plot some other indicators	
 	// plot("ATR (PIP)",ATR(20)/PIP,NEW,RED);
