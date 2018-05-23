@@ -1,0 +1,2 @@
+Fast,Slow,Index1,Index2,Asset,Algo,BarPeriod,TimeFrame,WinLong,WinShort,WinTotal,LossLong,LossShort,LossTotal,NumWinLong,NumWinShort,NumWinTotal,NumLossLong,NumLossShort,NumLossTotal,WinMaxLong,WinMaxShort,WinMaxTotal,LossMaxLong,LossMaxShort,LossMaxTotal
+1.00000000,30.00000000,1,1,EUR/USD,,30.00000000,1,0.00000000,0.00000000,2496.10627611,0.00000000,0.00000000,2300.88626925,0,0,545,0,0,1392,0.00000000,0.00000000,26.39297104,0.00000000,0.00000000,16.20706749

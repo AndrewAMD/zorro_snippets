@@ -1,0 +1,121 @@
+---
+title: "Dual Parameter Analysis"
+author: "Andrew Dolder"
+date: "September 22, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(plotly)
+
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r makefunction}
+
+get_metric_list = function(csv_file){
+  # csv_file = "Luxor104.csv"
+  df = read.csv(csv_file) # read csv file
+  df = df %>%
+  mutate(NetProfit = WinTotal - LossTotal) %>%
+  mutate(NumTrades = NumWinTotal + NumLossTotal) %>%
+  mutate(NetProfitPerTrade = NetProfit/NumTrades)
+  
+  assetlist = unique(x=df$Asset)
+  assetlist_l = length(assetlist)
+  
+  x = numeric(max(df[,"Index1"]))
+  y = numeric(max(df[,"Index2"]))
+  # z = matrix(nrow = max(df[,"Index1"]), ncol = max(df[,"Index2"]), data = 0)
+  
+  for(i in 1:max(df[,"Index2"])){
+    y[i] = df[i,2]
+  }
+  for(i in 1:max(df[,"Index1"])){
+    x[i] = df[(1+((i-1)*max(df[,"Index2"]))),1]
+  }
+  # for(k in 1:dim(df)[1]){
+  #   z[df[k,"Index1"],df[k,"Index2"]] = df[k,metric]
+  # }
+  
+  xi <- sort(unique(df$"Index1"))
+  yi <- sort(unique(df$"Index2"))
+  z <- matrix(NA, length(xi), length(yi))
+  
+  zlist = list(z)
+  if(assetlist_l>1){
+    for(i in 2:assetlist_l){
+      zlist[[i]] = z
+    }
+  }
+  
+  zNetProfit = zlist
+  zNumTrades = zlist
+  zNetProfitPerTrade = zlist
+  
+  # z[cbind(df$"Index1", df$"Index2")] <- df$NetProfit
+  
+  for(i in 1:assetlist_l){
+    df1 = df[df$Asset==assetlist[i],]
+    zNetProfit[[i]][cbind(df1$"Index1", df1$"Index2")] <- df1$NetProfit
+    zNumTrades[[i]][cbind(df1$"Index1", df1$"Index2")] <- df1$NumTrades
+    zNetProfitPerTrade[[i]][cbind(df1$"Index1", df1$"Index2")] <- df1$NetProfitPerTrade
+  }
+  
+  
+  return(list(x=x,y=y,assetlist=assetlist,zNetProfit=zNetProfit,zNumTrades=zNumTrades,zNetProfitPerTrade=zNetProfitPerTrade))
+} 
+
+setwd("C:/Users/normal/Zorro")
+l1 = get_metric_list("Luxor104.csv")
+
+p1 <- plot_ly(x = l1$x, y = l1$y, z = l1$zNetProfit[[1]]) %>% 
+  add_surface() %>%
+  layout(
+    title = "Luxor 104 Net Profit",
+    scene = list(
+      xaxis = list(title = "Fast"),
+      yaxis = list(title = "Slow"),
+      zaxis = list(title = "NetProfit")
+    ))
+p1
+
+p2 <- plot_ly(x = l1$x, y = l1$y, z = l1$zNumTrades[[1]]) %>% 
+  add_surface() %>%
+  layout(
+    title = "Luxor 103 NumTrades",
+    scene = list(
+      xaxis = list(title = "Fast"),
+      yaxis = list(title = "Slow"),
+      zaxis = list(title = "NumTrades")
+    ))
+p2
+
+p3 <- plot_ly(x = l1$x, y = l1$y, z = l1$zNetProfitPerTrade[[1]]) %>% 
+  add_surface() %>%
+  layout(
+    title = "Luxor 103 NetProfitPerTrade",
+    scene = list(
+      xaxis = list(title = "Fast"),
+      yaxis = list(title = "Slow"),
+      zaxis = list(title = "NetProfitPerTrade")
+    ))
+p3
+
+
+
+# p1 = plot_ly(data = df, x = df$Fast, y = df$Slow, z= df$NetProfit, type="mesh3d")  # %>% add_surface()
+
+# p1= plot_ly(z=~s)  %>% add_surface()
+# p1
+
+# nycflights <- nycflights %>%
+#   mutate(dep_type = ifelse(dep_delay < 5, "on time", "delayed"))
+```
