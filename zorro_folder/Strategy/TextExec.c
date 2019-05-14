@@ -12,19 +12,19 @@ HANDLE bgp_launch(string Program, string Options);
 
 // Returns STILL_ACTIVE if process is still running. Else closes handle and returns code.
 // On error, it returns EXITCODE_ERROR and prints the error code to the log.
-DWORD bpp_exit_code(HANDLE h);
+DWORD bgp_exit_code(HANDLE h);
 
 int main(){
 	HANDLE h = bgp_launch("notepad",0);
 	printf("\nhandle: %d",h);
 	while(true){
 		if(!wait(5000)) break; // wait five seconds
-		DWORD code = bpp_exit_code(h);
+		DWORD code = bgp_exit_code(h);
 		if(code==STILL_ACTIVE){
 			printf("\nNotepad is still open...");
 		} 
 		else if (code == EXITCODE_ERROR){
-			printf("\nbpp_exit_code encountered an error.");
+			printf("\nbgp_exit_code encountered an error.");
 			break;
 		}
 		else
@@ -52,7 +52,7 @@ HANDLE bgp_launch(string Program, string Options){
 	return h;
 }
 
-bool bpp_exit_code(HANDLE h){
+bool bgp_exit_code(HANDLE h){
 	DWORD code;
 	bool good = GetExitCodeProcess(h,&code);
 	if(!good){
