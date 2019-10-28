@@ -103,7 +103,7 @@ void run(){
 	}
 	printf("\nMaster instance");
 	int i;
-	for(i=1;i<=4;i++){
+	for(i=1;i<=18;i++){
 		string opt[64];
 		sprintf(opt,"-run %s -i %d -quiet",Script,i);
 		mb_add_task("zorro",opt);
