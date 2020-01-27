@@ -2,7 +2,6 @@
 
 #define MB_NUM_CLIENTS 7 // Number of background Zorro clients.
 int mb_NumTasks = 0; // Counts number of batched items to do.
-string mb_get_filename_program(int num){return strf(".\\Data\\%s%d_prog.txt",Script,num);}
 string mb_get_filename_options(int num){return strf(".\\Data\\%s%d_opt.txt",Script,num);}
 void mb_add_task(string Options){
 	lock();
