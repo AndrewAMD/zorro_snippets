@@ -1,97 +1,119 @@
 #include<default.c>
 #include<stdio.h>
 
-#define SB_CAP 8
-typedef struct SENDBUFFER{
-	char buf[SB_CAP];
+#define RB_CAP 8
+typedef struct RINGBUFFER{
+	char buf[RB_CAP];
 	int pos;  			// beginning of all data.
 	int size;    		// size of pushed data
-} SENDBUFFER;
+} RINGBUFFER;
 
-typedef struct SB_EXPOSURE{
+typedef struct RB_EXPOSURE{
 	char* p1; // ptr 1
 	char* p2; // ptr 2
 	int s1; // size at ptr 1
 	int s2; // size at ptr 2
-} SB_EXPOSURE;
+} RB_EXPOSURE;
 
-typedef int SB_ERR;
-#define SB_ERR_OK 				   0
-#define SB_ERR_BAD_ARGUMENT	-101
-#define SB_ERR_NULL_POINTER	-102
-#define SB_ERR_BUF_TOO_SMALL	-103
-#define SB_ERR_EXCESSIVE_PULL	-104
-#define SB_ERR_MEMCPY_FAILURE	-105
+typedef int RB_ERR;
+#define RB_ERR_OK 				   0
+#define RB_ERR_BAD_ARGUMENT	-101
+#define RB_ERR_NULL_POINTER	-102
+#define RB_ERR_BUF_TOO_SMALL	-103
+#define RB_ERR_EXCESSIVE_POP	-104
+#define RB_ERR_MEMCPY_FAILURE	-105
 
-SB_ERR sb_init(SENDBUFFER* pSB){
-	if(!pSB){
-		return SB_ERR_NULL_POINTER;
+RB_ERR rb_init(RINGBUFFER* pRB){
+	if(!pRB){
+		return RB_ERR_NULL_POINTER;
 	}
-	memset(pSB,0,sizeof(SENDBUFFER));
-	return SB_ERR_OK;
+	memset(pRB,0,sizeof(RINGBUFFER));
+	return RB_ERR_OK;
 }
 
-SB_ERR sb_push(SENDBUFFER* pSB, SB_EXPOSURE* pEX, char* data, int len){
-	if(!pSB || !pEX || !data){
-		return SB_ERR_NULL_POINTER;
+RB_ERR rb_push(RINGBUFFER* pRB, RB_EXPOSURE* pEX, char* data, int len){
+	if(!pRB || !data){
+		return RB_ERR_NULL_POINTER;
 	}
 	if(len <= 0){
-		return SB_ERR_BAD_ARGUMENT;
+		return RB_ERR_BAD_ARGUMENT;
 	}
-	if((pSB->size + len) > SB_CAP){
-		return SB_ERR_BUF_TOO_SMALL;
+	if((pRB->size + len) > RB_CAP){
+		return RB_ERR_BUF_TOO_SMALL;
 	}
-	memset(pEX,0,sizeof(SB_EXPOSURE));
-	int pos1 = pSB->pos + pSB->size;
-	pos1 -= SB_CAP * (pos1/SB_CAP); //wrap-around buffer
-	pEX->p1 = pSB->buf + pos1;
-	pEX->s1 = min(SB_CAP-pos1, len);
-	pEX->s2 = len - pEX->s1;
-	if(pEX->s2){
-		pEX->p2 = pSB->buf;
-	}
-	int err = memcpy_s(pEX->p1,pEX->s1,data,pEX->s1);
-	if(err){
-		return SB_ERR_MEMCPY_FAILURE;
-	}
-	if(pEX->s1){
-		err = memcpy_s(pEX->p2,pEX->s2,data+pEX->s1,pEX->s2);
+	if(pEX){
+		memset(pEX,0,sizeof(RB_EXPOSURE));
+		int pos1 = pRB->pos + pRB->size;
+		pos1 -= RB_CAP * (pos1/RB_CAP); //wrap-around buffer
+		pEX->p1 = pRB->buf + pos1;
+		pEX->s1 = min(RB_CAP-pos1, len);
+		pEX->s2 = len - pEX->s1;
+		if(pEX->s2){
+			pEX->p2 = pRB->buf;
+		}
+		int err = memcpy_s(pEX->p1,pEX->s1,data,pEX->s1);
 		if(err){
-			return SB_ERR_MEMCPY_FAILURE;
+			return RB_ERR_MEMCPY_FAILURE;
+		}
+		if(pEX->s1){
+			err = memcpy_s(pEX->p2,pEX->s2,data+pEX->s1,pEX->s2);
+			if(err){
+				return RB_ERR_MEMCPY_FAILURE;
+			}
 		}
 	}
-	pSB->size += len;
-	return SB_ERR_OK;
+	pRB->size += len;
+	return RB_ERR_OK;
 }
 
-SB_ERR sb_pop(SENDBUFFER* pSB, int len){
-	if(!pSB){
-		return SB_ERR_NULL_POINTER;
+RB_ERR rb_pop(RINGBUFFER* pRB, char* pBufOut, int len){
+	if(!pRB){
+		return RB_ERR_NULL_POINTER;
 	}
 	if(len <= 0){
-		return SB_ERR_BAD_ARGUMENT;
+		return RB_ERR_BAD_ARGUMENT;
 	}
-	if((pSB->size - len) < 0){
-		return SB_ERR_EXCESSIVE_PULL;
+	if((pRB->size - len) < 0){
+		return RB_ERR_EXCESSIVE_POP;
 	}
-	pSB->size -= len;
-	pSB->pos += len;
-	pSB->pos -= SB_CAP * (pSB->pos/SB_CAP); //wrap-around buffer
-	return SB_ERR_OK;
+	if(pBufOut){
+		char *p1 = NULL, *p2 = NULL; // pointers to copy-from
+		int s1=0, s2=0;
+		p1 = pRB->buf + pRB->pos;
+		s1 = min(RB_CAP-pRB->pos, len);
+		s2 = len - s1;
+		if(s2){
+			p2 = pRB->buf;
+		}
+		int err = memcpy_s(pBufOut,s1,p1,s1);
+		if(err){
+			return RB_ERR_MEMCPY_FAILURE;
+		}
+		if(s1){
+			err = memcpy_s(pBufOut+s1,s2,p2,s2);
+			if(err){
+				return RB_ERR_MEMCPY_FAILURE;
+			}
+		}
+	}
+	pRB->size -= len;
+	pRB->pos += len;
+	pRB->pos -= RB_CAP * (pRB->pos/RB_CAP); //wrap-around buffer
+	return RB_ERR_OK;
 }
 
 
-void analyze(int err, SENDBUFFER* pSB, SB_EXPOSURE* pEX){
+void analyze(int err, RINGBUFFER* pRB, RB_EXPOSURE* pEX, char* pPop){
 	if(err){printf("\nerr: %d",err);	return;}
-	printf("\npos: %d, size: %d, s1: %d, s2: %d", pSB->pos, pSB->size, pEX->s1, pEX->s2);
+	printf("\npos: %d, size: %d, s1: %d, s2: %d", pRB->pos, pRB->size, pEX->s1, pEX->s2);
 	
 	int i;
 	for(i=0;i<8;i++){
 		if(!i){
-			printf(" array: %c",pSB->buf[i]);
+			printf(" array: %c",pRB->buf[i]);
 		}
 		else{
-			printf(",%c",pSB->buf[i]);
+			printf(",%c",pRB->buf[i]);
 		}
 	}
 	char s1[9], s2[9];
@@ -103,36 +125,52 @@ void analyze(int err, SENDBUFFER* pSB, SB_EXPOSURE* pEX){
 	}
 	printf(" [%s] [%s]",s1,s2);
 	
+	if(pPop){
+		if(strlen(pPop)){
+			printf(", (%s)",pPop);
+		}
+	}
+	
 }
 
+
 int main(){
-	SENDBUFFER sb;	
-	SB_EXPOSURE ex;
+	RINGBUFFER rb;	
+	RB_EXPOSURE ex;
+	char pop[9];
+	memset(pop,0,9);
 	int err = 0;
 	
-	sb_init(&sb);
-	memset(&ex,0,sizeof(SB_EXPOSURE));
+	rb_init(&rb);
+	memset(&ex,0,sizeof(RB_EXPOSURE));
 	printf("\ninitializing...");
-	analyze(err,&sb,&ex);
+	analyze(err,&rb,&ex,pop);
 	
-	printf("\npush 7...");
-	err = sb_push(&sb,&ex,"0123456",7);
-	analyze(err,&sb,&ex);
+	printf("\npush 6...");
+	err = rb_push(&rb,&ex,"012345",6);
+	analyze(err,&rb,&ex,pop);
 	
-	printf("\npop 7...");
-	err = sb_pop(&sb,7);
-	analyze(err,&sb,&ex);
+	printf("\npop 3...");
+	err = rb_pop(&rb,pop,3);
+	analyze(err,&rb,&ex,pop);
+	memset(pop,0,9);
 	
-	printf("\npush 8...");
-	err = sb_push(&sb,&ex,"78901234",8);
-	analyze(err,&sb,&ex);
+	printf("\npush 5...");
+	err = rb_push(&rb,&ex,"67890",5);
+	analyze(err,&rb,&ex,pop);
 	
-	printf("\npop 5...");
-	err = sb_pop(&sb,5);
-	analyze(err,&sb,&ex);
+	printf("\npop 6...");
+	err = rb_pop(&rb,pop,6);
+	analyze(err,&rb,&ex,pop);
+	memset(pop,0,9);
 	
 	printf("\npush 4...");
-	err = sb_push(&sb,&ex,"5678",4);
-	analyze(err,&sb,&ex);
+	err = rb_push(&rb,&ex,"1234",4);
+	analyze(err,&rb,&ex,pop);
+	
+	printf("\npop 6...");
+	err = rb_pop(&rb,pop,6);
+	analyze(err,&rb,&ex,pop);
+	memset(pop,0,9);
 	
 }
