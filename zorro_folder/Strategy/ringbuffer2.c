@@ -31,8 +31,8 @@ RB_ERR rb_init(RINGBUFFER* pRB){
 	return RB_ERR_OK;
 }
 
-RB_ERR rb_push(RINGBUFFER* pRB, RB_EXPOSURE* pEX, char* data, int len){
-	if(!pRB || !data){
+RB_ERR rb_push(RINGBUFFER* pRB, RB_EXPOSURE* pEX, char* pBufIn, int len){
+	if(!pRB || !pEX){
 		return RB_ERR_NULL_POINTER;
 	}
 	if(len <= 0){
@@ -41,22 +41,23 @@ RB_ERR rb_push(RINGBUFFER* pRB, RB_EXPOSURE* pEX, char* data, int len){
 	if((pRB->size + len) > RB_CAP){
 		return RB_ERR_BUF_TOO_SMALL;
 	}
-	if(pEX){
-		memset(pEX,0,sizeof(RB_EXPOSURE));
-		int pos1 = pRB->pos + pRB->size;
-		pos1 -= RB_CAP * (pos1/RB_CAP); //wrap-around buffer
-		pEX->p1 = pRB->buf + pos1;
-		pEX->s1 = min(RB_CAP-pos1, len);
-		pEX->s2 = len - pEX->s1;
-		if(pEX->s2){
-			pEX->p2 = pRB->buf;
-		}
-		int err = memcpy_s(pEX->p1,pEX->s1,data,pEX->s1);
+	
+	memset(pEX,0,sizeof(RB_EXPOSURE));
+	int pos1 = pRB->pos + pRB->size;
+	pos1 -= RB_CAP * (pos1/RB_CAP); //wrap-around buffer
+	pEX->p1 = pRB->buf + pos1;
+	pEX->s1 = min(RB_CAP-pos1, len);
+	pEX->s2 = len - pEX->s1;
+	if(pEX->s2){
+		pEX->p2 = pRB->buf;
+	}
+	if(pBufIn){
+		int err = memcpy_s(pEX->p1,pEX->s1,pBufIn,pEX->s1);
 		if(err){
 			return RB_ERR_MEMCPY_FAILURE;
 		}
 		if(pEX->s1){
-			err = memcpy_s(pEX->p2,pEX->s2,data+pEX->s1,pEX->s2);
+			err = memcpy_s(pEX->p2,pEX->s2,pBufIn+pEX->s1,pEX->s2);
 			if(err){
 				return RB_ERR_MEMCPY_FAILURE;
 			}
