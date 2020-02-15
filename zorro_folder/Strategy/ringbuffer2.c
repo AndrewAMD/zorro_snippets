@@ -35,7 +35,6 @@ RB_ERR rb_init(RINGBUFFER* pRB){
 
 RB_ERR rb_push(RINGBUFFER* pRB, RB_EXPOSURE* pEX, char* pBufIn, int len){
 	if(!pRB || !pEX){
-		pRB->err_msg = "rb_push: bad pointer";
 		return RB_ERR_NULL_POINTER;
 	}
 	if(len <= 0){
@@ -77,7 +76,6 @@ RB_ERR rb_push(RINGBUFFER* pRB, RB_EXPOSURE* pEX, char* pBufIn, int len){
 
 RB_ERR rb_peek(RINGBUFFER* pRB, char* pBufOut, int len){
 	if(!pRB){
-		pRB->err_msg = "rb_peek: null pointer";
 		return RB_ERR_NULL_POINTER;
 	}
 	if(len <= 0){
