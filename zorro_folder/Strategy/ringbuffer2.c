@@ -6,6 +6,7 @@ typedef struct RINGBUFFER{
 	char buf[RB_CAP];
 	int pos;  			// beginning of all data.
 	int size;    		// size of pushed data
+	const char* err_msg;
 } RINGBUFFER;
 
 typedef struct RB_EXPOSURE{
@@ -28,17 +29,21 @@ RB_ERR rb_init(RINGBUFFER* pRB){
 		return RB_ERR_NULL_POINTER;
 	}
 	memset(pRB,0,sizeof(RINGBUFFER));
+	pRB->err_msg = "OK";
 	return RB_ERR_OK;
 }
 
 RB_ERR rb_push(RINGBUFFER* pRB, RB_EXPOSURE* pEX, char* pBufIn, int len){
 	if(!pRB || !pEX){
+		pRB->err_msg = "rb_push: bad pointer";
 		return RB_ERR_NULL_POINTER;
 	}
 	if(len <= 0){
+		pRB->err_msg = "rb_push: bad agument: len";
 		return RB_ERR_BAD_ARGUMENT;
 	}
 	if((pRB->size + len) > RB_CAP){
+		pRB->err_msg = "rb_push: ring buffer is too small for given length";
 		return RB_ERR_BUF_TOO_SMALL;
 	}
 	
@@ -54,27 +59,33 @@ RB_ERR rb_push(RINGBUFFER* pRB, RB_EXPOSURE* pEX, char* pBufIn, int len){
 	if(pBufIn){
 		int err = memcpy_s(pEX->p1,pEX->s1,pBufIn,pEX->s1);
 		if(err){
+			pRB->err_msg = "rb_push: memcpy_s failure 1";
 			return RB_ERR_MEMCPY_FAILURE;
 		}
 		if(pEX->s1){
 			err = memcpy_s(pEX->p2,pEX->s2,pBufIn+pEX->s1,pEX->s2);
 			if(err){
+				pRB->err_msg = "rb_push: memcpy_s failure 2";
 				return RB_ERR_MEMCPY_FAILURE;
 			}
 		}
 	}
 	pRB->size += len;
+	pRB->err_msg = "OK";
 	return RB_ERR_OK;
 }
 
 RB_ERR rb_peek(RINGBUFFER* pRB, char* pBufOut, int len){
 	if(!pRB){
+		pRB->err_msg = "rb_peek: null pointer";
 		return RB_ERR_NULL_POINTER;
 	}
 	if(len <= 0){
+		pRB->err_msg = "rb_peek: bad argument: len";
 		return RB_ERR_BAD_ARGUMENT;
 	}
 	if((pRB->size - len) < 0){
+		pRB->err_msg = "rb_peek: pop length is greater than remaining bytes";
 		return RB_ERR_EXCESSIVE_POP;
 	}
 	if(pBufOut){
@@ -88,11 +99,13 @@ RB_ERR rb_peek(RINGBUFFER* pRB, char* pBufOut, int len){
 		}
 		int err = memcpy_s(pBufOut,s1,p1,s1);
 		if(err){
+			pRB->err_msg = "rb_peek: memcpy_s failure 1";
 			return RB_ERR_MEMCPY_FAILURE;
 		}
 		if(s1){
 			err = memcpy_s(pBufOut+s1,s2,p2,s2);
 			if(err){
+				pRB->err_msg = "rb_peek: memcpy_s failure 2";
 				return RB_ERR_MEMCPY_FAILURE;
 			}
 		}
@@ -108,6 +121,7 @@ RB_ERR rb_pop(RINGBUFFER* pRB, char* pBufOut, int len){
 	pRB->size -= len;
 	pRB->pos += len;
 	pRB->pos -= RB_CAP * (pRB->pos/RB_CAP); //wrap-around buffer
+	pRB->err_msg = "OK";
 	return RB_ERR_OK;
 }
 
@@ -139,7 +153,9 @@ void analyze(int err, RINGBUFFER* pRB, RB_EXPOSURE* pEX, char* pPop){
 			printf(", (%s)",pPop);
 		}
 	}
-	
+	if(pRB->err_msg){
+		printf(", err_msg:\"%s\"",pRB->err_msg);
+	}
 }
 
 
