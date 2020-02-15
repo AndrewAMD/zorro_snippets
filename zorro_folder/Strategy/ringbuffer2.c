@@ -67,7 +67,7 @@ RB_ERR rb_push(RINGBUFFER* pRB, RB_EXPOSURE* pEX, char* pBufIn, int len){
 	return RB_ERR_OK;
 }
 
-RB_ERR rb_pop(RINGBUFFER* pRB, char* pBufOut, int len){
+RB_ERR rb_peek(RINGBUFFER* pRB, char* pBufOut, int len){
 	if(!pRB){
 		return RB_ERR_NULL_POINTER;
 	}
@@ -96,6 +96,14 @@ RB_ERR rb_pop(RINGBUFFER* pRB, char* pBufOut, int len){
 				return RB_ERR_MEMCPY_FAILURE;
 			}
 		}
+	}
+	return RB_ERR_OK;
+}
+
+RB_ERR rb_pop(RINGBUFFER* pRB, char* pBufOut, int len){
+	int err = rb_peek(pRB,pBufOut,len);
+	if(err){
+		return err;
 	}
 	pRB->size -= len;
 	pRB->pos += len;
