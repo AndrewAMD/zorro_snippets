@@ -54,7 +54,7 @@ void main(void){
 		Now = 0;
 	}
 	dataSort(h1);
-	//dataSave(h1,FileOut,0,0);
+	
 	
 	//save by year
 	int yr=0;
