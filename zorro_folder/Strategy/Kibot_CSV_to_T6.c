@@ -1,4 +1,7 @@
-#define ASSETNAME "ABT"
+// Set this to whichever stock you want to convert.
+// i.e. replace "ABT" with "MSFT"
+// Kibot CSV file must be in History folder.
+#define ASSETNAME "ABT" 
 
 char* get_FileIn(string sAsset){
 	return strf(".\\History\\%s.csv",sAsset);
@@ -28,7 +31,9 @@ typedef struct T6
 */
 
 void main(void){
+	set(LOGFILE);
 	int h1 = 1, h2 = 2;
+	printf("\nLoading file %s...",get_FileIn(ASSETNAME));
 	int n = dataParse(h1,Format,get_FileIn(ASSETNAME));
 	printf("\n%d records parsed",n);
 	if(!n){
@@ -55,7 +60,6 @@ void main(void){
 	}
 	dataSort(h1);
 	
-	
 	//save by year
 	int yr=0;
 	for(yr=yr_min; yr<=yr_max; yr++){
@@ -76,6 +80,7 @@ void main(void){
 			Now = 0;
 		}
 		dataSave(h2,get_FileOut(ASSETNAME,yr),0,j);
+		printf("\nSaved %s %4d -> %s",ASSETNAME,yr,get_FileOut(ASSETNAME,yr));
 	}
 	
 	printf("\nDone!");
